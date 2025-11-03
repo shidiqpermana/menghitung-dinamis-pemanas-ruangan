@@ -1,0 +1,44 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.integrate import odeint
+
+# Parameter sistem
+C = 5000.0  # kapasitas termal (J/°C)
+k = 50.0    # koefisien kehilangan panas (W/°C)
+Ta = 25.0   # suhu lingkungan (°C)
+
+# Persamaan diferensial
+def dTdt(T, t, u_func):
+    return -(k / C) * (T - Ta) + u_func(t) / C
+
+# Definisi berbagai jenis input
+def step_u(t, u0=2000.0):
+    return u0 if t >= 0 else 0.0
+
+def ramp_u(t, slope=2.0):
+    return slope * t
+
+def sinus_u(t, U=1000.0, freq=0.005):
+    return U * np.sin(2*np.pi*freq*t)
+
+# Rentang waktu simulasi
+t = np.linspace(0, 1000, 1001)
+T0 = Ta  # kondisi awal
+
+# Simulasi untuk tiga jenis input
+T_step = odeint(lambda T, time: dTdt(T, time, step_u), T0, t).flatten()
+T_ramp = odeint(lambda T, time: dTdt(T, time, ramp_u), T0, t).flatten()
+T_sin  = odeint(lambda T, time: dTdt(T, time, sinus_u), T0, t).flatten()
+
+# Plot hasil simulasi
+plt.figure(figsize=(10,6))
+plt.plot(t, T_step, label='Step input (2000 W)')
+plt.plot(t, T_ramp, label='Ramp input (2 W/s)')
+plt.plot(t, T_sin,  label='Sinusoidal input (1000 W)')
+plt.axhline(Ta, color='k', linestyle='--', label='Suhu Lingkungan')
+plt.xlabel('Waktu (s)')
+plt.ylabel('Suhu Ruangan (°C)')
+plt.title('Simulasi Sistem Pemanasan Ruangan')
+plt.legend()
+plt.grid(True)
+plt.show()
